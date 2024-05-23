@@ -16,6 +16,7 @@ class MenuCategory extends StatefulWidget {
   bool showAsGrid;
   double? imageSize;
   double? cardAspectRatio;
+  List? menus;
   int crossAxisCount;
   MenuCategory(
       {super.key,
@@ -25,6 +26,7 @@ class MenuCategory extends StatefulWidget {
       this.showAsGrid = false,
       this.imageSize = 218,
       this.crossAxisCount = 4,
+      this.menus,
       this.cardAspectRatio});
 
   @override
@@ -62,6 +64,85 @@ class _MenuCategoryState extends State<MenuCategory> {
     futureMenu = getMenuList();
   }
 
+  Widget renderCategoryWithMenu() {
+    if (widget.menus != null) {
+      return GridView.count(
+        padding: const EdgeInsets.only(bottom: 20),
+        mainAxisSpacing: 10.0,
+        crossAxisSpacing: 10.0,
+        primary: false,
+        shrinkWrap: true,
+        childAspectRatio: widget.cardAspectRatio ?? 1,
+        crossAxisCount: widget.crossAxisCount,
+        children: widget.menus!.map((item) {
+          Map<String, dynamic> menuData = {
+            "id": item['id'],
+            "name": item['name'],
+            "image": item['image'],
+            "price": item['price'],
+            "price_after_discount": item['price_after_discount'],
+            "discount": item['discount'],
+            "description": item['description'],
+            "labels": item['labels'],
+            "category_icon": widget.categoryIcon,
+            "categories": item['categories'],
+            "imageSize": widget.imageSize,
+          };
+          return MenuCard(
+            menu: menuData,
+            showAsGrid: widget.showAsGrid,
+          );
+        }).toList(),
+      );
+    } else {
+      return FutureBuilder(
+          future: futureMenu,
+          builder: (context, snapshot) {
+            if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+              final menuList = snapshot.data;
+              return GridView.count(
+                padding: const EdgeInsets.only(bottom: 20),
+                mainAxisSpacing: 10.0,
+                crossAxisSpacing: 10.0,
+                primary: false,
+                shrinkWrap: true,
+                childAspectRatio: widget.cardAspectRatio ?? 1,
+                crossAxisCount: widget.crossAxisCount,
+                children: menuList!.map((item) {
+                  Map<String, dynamic> menuData = {
+                    "id": item.id,
+                    "name": item.name,
+                    "image": item.image,
+                    "price": item.price,
+                    "price_after_discount": item.priceAfterDiscount,
+                    "discount": item.discount,
+                    "description": item.description,
+                    "labels": item.labels,
+                    "category_icon": widget.categoryIcon,
+                    "categories": item.categories,
+                    "imageSize": widget.imageSize,
+                  };
+                  return MenuCard(
+                    menu: menuData,
+                    showAsGrid: widget.showAsGrid,
+                  );
+                }).toList(),
+              );
+            } else if (snapshot.data != null && snapshot.data!.isEmpty) {
+              return Center(
+                  child: Text(
+                'No menu for this category',
+                style: TextStyle(fontSize: 20.sp),
+              ));
+            } else if (snapshot.hasError) {
+              return Text('${snapshot.error}');
+            }
+
+            return const Center(child: CircularProgressIndicator());
+          });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -85,51 +166,7 @@ class _MenuCategoryState extends State<MenuCategory> {
           ],
         ),
         const SizedBox(height: 10.0),
-        FutureBuilder(
-            future: futureMenu,
-            builder: (context, snapshot) {
-              if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                final menuList = snapshot.data;
-                return GridView.count(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  mainAxisSpacing: 10.0,
-                  crossAxisSpacing: 10.0,
-                  primary: false,
-                  shrinkWrap: true,
-                  childAspectRatio: widget.cardAspectRatio ?? 1,
-                  crossAxisCount: widget.crossAxisCount,
-                  children: menuList!.map((item) {
-                    Map<String, dynamic> menuData = {
-                      "id": item.id,
-                      "name": item.name,
-                      "image": item.image,
-                      "price": item.price,
-                      "price_after_discount": item.priceAfterDiscount,
-                      "discount": item.discount,
-                      "description": item.description,
-                      "labels": item.labels,
-                      "category_icon": widget.categoryIcon,
-                      "categories": item.categories,
-                      "imageSize": widget.imageSize,
-                    };
-                    return MenuCard(
-                      menu: menuData,
-                      showAsGrid: widget.showAsGrid,
-                    );
-                  }).toList(),
-                );
-              } else if (snapshot.data != null && snapshot.data!.isEmpty) {
-                return Center(
-                    child: Text(
-                  'No menu for this category',
-                  style: TextStyle(fontSize: 20.sp),
-                ));
-              } else if (snapshot.hasError) {
-                return Text('${snapshot.error}');
-              }
-
-              return const Center(child: CircularProgressIndicator());
-            }),
+        renderCategoryWithMenu(),
       ],
     );
   }

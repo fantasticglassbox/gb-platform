@@ -480,13 +480,23 @@ class _MenuDrawerState extends State<MenuDrawer> {
     return modifiersFields;
   }
 
-  List<Widget> renderCategoryIcon(List categories) {
-    return categories.map((item) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: GBIcon.getIcon(item['icon']),
-      );
-    }).toList();
+  List<Widget> renderCategoryIcon(dynamic categories) {
+    if (categories is List) {
+      return categories.map((item) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: GBIcon.getIcon(item['icon']),
+        );
+      }).toList();
+    } else {
+      List listCat = categories.split(',');
+      return listCat.map((item) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: GBIcon.getIcon(item),
+        );
+      }).toList();
+    }
   }
 
   @override

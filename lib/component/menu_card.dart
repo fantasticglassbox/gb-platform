@@ -44,13 +44,23 @@ class _MenuCardState extends State<MenuCard> {
     );
   }
 
-  List<Widget> renderCategoryIcon(List categories, {double size = 16}) {
-    return categories.map((item) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: GBIcon.getIcon(item['icon'], size: size),
-      );
-    }).toList();
+  List<Widget> renderCategoryIcon(dynamic categories, {double size = 16}) {
+    if (categories is List) {
+      return categories.map((item) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: GBIcon.getIcon(item['icon'], size: size),
+        );
+      }).toList();
+    } else {
+      List listCat = categories.split(',');
+      return listCat.map((item) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: GBIcon.getIcon(item, size: size),
+        );
+      }).toList();
+    }
   }
 
   @override

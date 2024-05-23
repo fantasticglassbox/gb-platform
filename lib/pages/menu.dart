@@ -35,7 +35,8 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
   int tabLength = 0;
   final _formKey = GlobalKey<FormBuilderState>();
   String savedValue = '';
-  List<MenuModel> searchResult = [];
+  Map searchResult = {};
+  int searchTotal = 0;
   int? cartIndex;
   bool searchMode = false;
   String activeCategory = 'All';
@@ -48,6 +49,7 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
     GlobalKey(),
     GlobalKey()
   ];
+  List<Map> listOfCategory = [];
 
   final _storage = const FlutterSecureStorage();
   late Future<List<CategoryModel>> futureMenu;
@@ -69,11 +71,8 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
 
     Map<String, dynamic> queryParam = {'keyword': query};
 
-    if (activeCategoryId != '') {
-      queryParam['category_id'] = activeCategoryId;
-    }
-
-    var url = Uri.https('api.glassbox.id', '/v1/menus', queryParam);
+    var url =
+        Uri.https('api.glassbox.id', '/v1/menus-with-category', queryParam);
     final token = await _storage.readAll(
       aOptions: getAndroidOptions(),
     );
@@ -83,13 +82,13 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
     if (response.statusCode == 200) {
       if (response.body == 'null') {
         setState(() {
-          searchResult = [];
+          searchResult = {};
         });
       } else {
-        final List responseBody = json.decode(response.body);
+        final Map responseBody = json.decode(response.body);
         setState(() {
-          searchResult =
-              responseBody.map((e) => MenuModel.fromJSON(e)).toList();
+          searchResult = responseBody['data'];
+          searchTotal = responseBody['total'];
         });
       }
     } else {
@@ -111,10 +110,12 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
       List<CategoryModel> categoryList =
           responseBody.map((e) => CategoryModel.fromJSON(e)).toList();
       categoryList.removeWhere((element) => element.pos == -1);
-      _tabController = TabController(length: categoryList.length, vsync: this);
-      if (mounted) {
-        _tabController?.animateTo(context.read<AppProvider>().tabPosition);
-      }
+      categoryList.sort((a, b) => a.pos.compareTo(b.pos));
+      setState(() {
+        listOfCategory = categoryList.map((e) {
+          return {"id": e.id, "name": e.name, "icon": e.icon};
+        }).toList();
+      });
       return categoryList;
     } else {
       throw Exception('Failed to load ads list');
@@ -132,7 +133,7 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
     final Map responseBody = json.decode(response.body);
 
     if (response.statusCode == 200) {
-      return responseBody;
+      return responseBody['data'];
     } else {
       throw Exception('Failed to load ads list');
     }
@@ -166,7 +167,8 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  Widget renderSearchResult(List<MenuModel> menu) {
+  Widget renderSearchResult(Map menu) {
+    String query = _formKey.currentState?.value['query_input'];
     if (menu.isNotEmpty) {
       return LayoutBuilder(builder: (context, constraints) {
         final width = constraints.maxWidth;
@@ -187,34 +189,80 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
             aspectRatio = 2.0;
           }
         }
-        return GridView.count(
-          padding: const EdgeInsets.only(bottom: 20),
-          mainAxisSpacing: 10.0,
-          crossAxisSpacing: 10.0,
-          primary: false,
-          shrinkWrap: true,
-          childAspectRatio: aspectRatio,
-          crossAxisCount: crossAxisCount,
-          children: menu.map((item) {
-            Map<String, dynamic> menuData = {
-              "id": item.id,
-              "name": item.name,
-              "image": item.image,
-              "price": item.price,
-              "description": item.description,
-              "labels": item.labels,
-              "categories": item.categories
-            };
-            return MenuCard(
-              menu: menuData,
-              showAsGrid: showAsGrid,
-            );
-          }).toList(),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.only(top: 10, bottom: 20),
+              child: Text(
+                '$searchTotal search results for "$query"',
+                style: TextStyle(fontSize: 18.sp),
+              ),
+            ),
+            Expanded(
+                child: ScrollablePositionedList.builder(
+                    itemScrollController: itemScrollController,
+                    scrollOffsetController: scrollOffsetController,
+                    itemPositionsListener: itemPositionsListener,
+                    scrollOffsetListener: scrollOffsetListener,
+                    itemCount: menu.length,
+                    itemBuilder: (context, index) {
+                      if (menu.length == index) {
+                        return LayoutBuilder(builder: (context, constraints) {
+                          final width = constraints.maxWidth;
+                          double emptySpaceHeight =
+                              MediaQuery.of(context).size.height / 1.5;
+                          if (width <= 636) {
+                            emptySpaceHeight =
+                                MediaQuery.of(context).size.height / 1.3;
+                          }
+                          return SizedBox(
+                            height: emptySpaceHeight,
+                          );
+                        });
+                      } else {
+                        return LayoutBuilder(builder: (context, constraints) {
+                          final width = constraints.maxWidth;
+                          double aspectRatio = 1;
+                          int crossAxisCount = 4;
+                          if (width > 636 && width <= 1280) {
+                            if (showAsGrid) {
+                              aspectRatio = 0.9;
+                            } else {
+                              aspectRatio = 1.9;
+                            }
+                          } else if (width <= 636) {
+                            if (showAsGrid) {
+                              crossAxisCount = 3;
+                              aspectRatio = 0.8;
+                            } else {
+                              crossAxisCount = 2;
+                              aspectRatio = 2.8;
+                            }
+                          }
+                          return MenuCategory(
+                            categoryId: listOfCategory[
+                                    int.parse(menu.keys.elementAt(index)) - 1]
+                                ['id'],
+                            categoryName: listOfCategory[
+                                    int.parse(menu.keys.elementAt(index)) - 1]
+                                ['name'],
+                            categoryIcon: listOfCategory[
+                                    int.parse(menu.keys.elementAt(index)) - 1]
+                                ['icon'],
+                            menus: menu.values.elementAt(index),
+                            showAsGrid: showAsGrid,
+                            crossAxisCount: crossAxisCount,
+                            cardAspectRatio: aspectRatio,
+                            imageSize: 150,
+                          );
+                        });
+                      }
+                    })),
+          ],
         );
       });
     } else {
-      String query = _formKey.currentState?.value['query_input'];
-
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -227,7 +275,7 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
             const SizedBox(
               height: 20,
             ),
-            Text('0 search results for "$query" in $activeCategory category',
+            Text('0 search results for "$query"',
                 style: TextStyle(fontSize: 14.sp)),
             const SizedBox(
               height: 20,
@@ -281,7 +329,7 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   SizedBox(
-                      width: 400,
+                      width: 300,
                       child: FormBuilder(
                         key: _formKey,
                         child: FormBuilderTextField(
@@ -318,7 +366,24 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
                           ),
                         ),
                       )),
-                  const SizedBox(width: 50),
+                  const SizedBox(width: 15),
+                  searchMode
+                      ? InkWell(
+                          onTap: () {
+                            setState(() {
+                              searchMode = false;
+                              _formKey.currentState!.fields['query_input']
+                                  ?.didChange('');
+                            });
+                          },
+                          child: Text(
+                            'View All Menu',
+                            style: TextStyle(
+                                fontSize: 20.sp,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).primaryColor),
+                          ))
+                      : const SizedBox(),
                   Expanded(
                       child: Container(
                           child: Row(
@@ -356,12 +421,11 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   final menuList = snapshot.data;
-                  menuList!.sort((a, b) => a.pos.compareTo(b.pos));
                   return SizedBox(
                     height: 50.sp,
                     child: ListView(
                         scrollDirection: Axis.horizontal,
-                        children: menuList.map((item) {
+                        children: menuList!.map((item) {
                           return InkWell(
                               onTap: () {
                                 setState(() {
@@ -393,35 +457,6 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
                                   ])));
                         }).toList()),
                   );
-                  // return TabBar(
-                  //   controller: _tabController,
-                  //   isScrollable: true,
-                  //   unselectedLabelColor: const Color(0xff525D6A),
-                  //   tabAlignment: TabAlignment.start,
-                  //   onTap: (index) {
-                  //     _formKey.currentState!.fields['query_input']
-                  //         ?.didChange('');
-                  //     setState(() {
-                  //       searchMode = false;
-                  //       activeCategory = menuList[index].name;
-                  //       activeCategoryId = menuList[index].id;
-                  //     });
-                  //   },
-                  //   tabs: [
-                  //     ...menuList.map((item) {
-                  //       return Tab(
-                  //         child: Row(children: [
-                  //           GBIcon.getIcon(item.icon),
-                  //           const SizedBox(width: 8),
-                  //           Text(
-                  //             item.name,
-                  //             style: TextStyle(fontSize: 16.sp),
-                  //           )
-                  //         ]),
-                  //       );
-                  //     })
-                  //   ],
-                  // );
                 } else if (snapshot.hasError) {
                   return Text('${snapshot.error}');
                 }
@@ -439,12 +474,10 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
                       child: searchMode
                           ? renderSearchResult(searchResult)
                           : FutureBuilder(
-                              future: futureMenu,
+                              future: futureMenuWithCategory,
                               builder: (context, snapshot) {
                                 if (snapshot.hasData) {
                                   final menuList = snapshot.data;
-                                  menuList!
-                                      .sort((a, b) => a.pos.compareTo(b.pos));
                                   return ScrollablePositionedList.builder(
                                       itemScrollController:
                                           itemScrollController,
@@ -454,9 +487,9 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
                                           itemPositionsListener,
                                       scrollOffsetListener:
                                           scrollOffsetListener,
-                                      itemCount: menuList.length + 1,
+                                      itemCount: listOfCategory.length + 1,
                                       itemBuilder: (context, index) {
-                                        if (menuList.length == index) {
+                                        if (listOfCategory.length == index) {
                                           return LayoutBuilder(
                                               builder: (context, constraints) {
                                             final width = constraints.maxWidth;
@@ -498,11 +531,14 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
                                               }
                                             }
                                             return MenuCategory(
-                                              categoryId: menuList[index].id,
+                                              categoryId: listOfCategory[index]
+                                                  ['id'],
                                               categoryName:
-                                                  menuList[index].name,
+                                                  listOfCategory[index]['name'],
                                               categoryIcon:
-                                                  menuList[index].icon,
+                                                  listOfCategory[index]['icon'],
+                                              menus: menuList?[
+                                                  (index + 1).toString()],
                                               showAsGrid: showAsGrid,
                                               crossAxisCount: crossAxisCount,
                                               cardAspectRatio: aspectRatio,
@@ -511,86 +547,6 @@ class _MenuPageState extends State<MenuPage> with TickerProviderStateMixin {
                                           });
                                         }
                                       });
-                                  // return SingleChildScrollView(
-                                  //   child: Column(
-                                  //       children: menuList.map((item) {
-                                  //     return LayoutBuilder(
-                                  //         builder: (context, constraints) {
-                                  //       final width = constraints.maxWidth;
-                                  //       double aspectRatio = 1;
-                                  //       int crossAxisCount = 4;
-                                  //       if (width > 636 && width <= 1280) {
-                                  //         if (showAsGrid) {
-                                  //           aspectRatio = 0.9;
-                                  //         } else {
-                                  //           aspectRatio = 1.9;
-                                  //         }
-                                  //       } else if (width <= 636) {
-                                  //         if (showAsGrid) {
-                                  //           crossAxisCount = 3;
-                                  //           aspectRatio = 0.8;
-                                  //         } else {
-                                  //           crossAxisCount = 2;
-                                  //           aspectRatio = 2.8;
-                                  //         }
-                                  //       }
-                                  //       return MenuCategory(
-                                  //         categoryId: item.id,
-                                  //         categoryName: item.name,
-                                  //         categoryIcon: item.icon,
-                                  //         showAsGrid: showAsGrid,
-                                  //         crossAxisCount: crossAxisCount,
-                                  //         cardAspectRatio: aspectRatio,
-                                  //         imageSize: 150,
-                                  //       );
-                                  //     });
-                                  //   }).toList()),
-                                  // );
-
-                                  // return TabBarView(
-                                  //     controller: _tabController,
-                                  //     children: [
-                                  //       ...menuList.map((item) {
-                                  //         return LayoutBuilder(
-                                  //             builder: (context, constraints) {
-                                  //           final width = constraints.maxWidth;
-                                  //           double aspectRatio = 1;
-                                  //           int crossAxisCount = 4;
-                                  //           if (width > 636 && width <= 1280) {
-                                  //             if (showAsGrid) {
-                                  //               aspectRatio = 0.9;
-                                  //             } else {
-                                  //               aspectRatio = 1.9;
-                                  //             }
-                                  //           } else if (width <= 636) {
-                                  //             if (showAsGrid) {
-                                  //               crossAxisCount = 3;
-                                  //               aspectRatio = 0.8;
-                                  //             } else {
-                                  //               crossAxisCount = 2;
-                                  //               aspectRatio = 2.8;
-                                  //             }
-                                  //           }
-                                  //           return SingleChildScrollView(
-                                  //             child: Column(
-                                  //               children: [
-                                  //                 MenuCategory(
-                                  //                   categoryId: item.id,
-                                  //                   categoryName: item.name,
-                                  //                   categoryIcon: item.icon,
-                                  //                   showAsGrid: showAsGrid,
-                                  //                   crossAxisCount:
-                                  //                       crossAxisCount,
-                                  //                   cardAspectRatio:
-                                  //                       aspectRatio,
-                                  //                   imageSize: 150,
-                                  //                 ),
-                                  //               ],
-                                  //             ),
-                                  //           );
-                                  //         });
-                                  //       })
-                                  //     ]);
                                 } else if (snapshot.hasError) {
                                   return Text('${snapshot.error}');
                                 }

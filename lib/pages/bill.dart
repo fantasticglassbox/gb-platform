@@ -42,9 +42,12 @@ class _BillPageState extends State<BillPage> {
     final storage = await _storage.readAll(
       aOptions: getAndroidOptions(),
     );
-    setState(() {
-      totalPack = int.parse(storage['total_pack']!);
-    });
+    String? _totalPack = storage['total_pack'];
+    if (_totalPack != null) {
+      setState(() {
+        totalPack = int.parse(_totalPack);
+      });
+    }
   }
 
   @override
@@ -164,38 +167,36 @@ class _BillPageState extends State<BillPage> {
           ),
           content: SizedBox(
               width: 150.0,
-              child: Expanded(
-                child: FormBuilder(
-                  key: _formKey,
-                  clearValueOnUnregister: true,
-                  child: FormBuilderTextField(
-                    style: TextStyle(fontSize: 16.sp),
-                    name: 'bill_email',
-                    controller: _emailTextController,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: FormBuilderValidators.compose([
-                      FormBuilderValidators.required(),
-                      FormBuilderValidators.email()
-                    ]),
-                    decoration: InputDecoration(
-                        hintText: 'Email address',
-                        isDense: true,
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(10),
+              child: FormBuilder(
+                key: _formKey,
+                clearValueOnUnregister: true,
+                child: FormBuilderTextField(
+                  style: TextStyle(fontSize: 16.sp),
+                  name: 'bill_email',
+                  controller: _emailTextController,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: FormBuilderValidators.compose([
+                    FormBuilderValidators.required(),
+                    FormBuilderValidators.email()
+                  ]),
+                  decoration: InputDecoration(
+                      hintText: 'Email address',
+                      isDense: true,
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                          color: Colors.black,
+                          width: 1,
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Colors.black,
-                            width: 1,
-                          ),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(10),
-                        )),
-                  ),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(10),
+                      )),
                 ),
               )),
           actions: [
@@ -463,11 +464,13 @@ class _BillPageState extends State<BillPage> {
   String renderModifiers(Map modifers, String note) {
     String modifiers = '';
     for (var item in modifers.keys) {
-      String values = modifers[item].join(', ');
-      modifiers += '$item: $values, ';
+      List values = modifers[item].map((modifers) => modifers['name']).toList();
+      modifiers += '$item: ${values.join(', ')}, ';
     }
 
-    modifiers += 'note: $note';
+    if (note.isNotEmpty) {
+      modifiers += 'note: $note';
+    }
 
     return modifiers;
   }
@@ -507,7 +510,7 @@ class _BillPageState extends State<BillPage> {
               ),
               Text(
                 CurrencyFormat.convertToIdr(order['price']['value'], 0),
-                style: const TextStyle(fontWeight: FontWeight.w600),
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp),
               ),
             ],
           );
