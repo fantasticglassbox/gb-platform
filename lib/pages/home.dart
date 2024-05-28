@@ -94,6 +94,24 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     );
   }
 
+  Widget renderImage(String imageUrl) {
+    if (imageUrl.isEmpty) {
+      return Image.asset('images/default-home-banner.png',
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: 85.sp,
+          alignment: Alignment.center);
+    } else {
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: 85.sp,
+        alignment: Alignment.center,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -128,14 +146,8 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                         clipBehavior: Clip.hardEdge,
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(15)),
-                        child: Image.network(
-                          // 'https://gbstorage.sgp1.digitaloceanspaces.com/assets/dev/a/f89c0d84ed1db2e3.png',
-                          context.watch<MerchantProvider>().bannerImage,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: 85.sp,
-                          alignment: Alignment.center,
-                        ))),
+                        child: renderImage(
+                            context.watch<MerchantProvider>().bannerImage))),
               ],
             ),
             const SizedBox(height: 8),

@@ -63,6 +63,16 @@ class _MenuCardState extends State<MenuCard> {
     }
   }
 
+  Widget renderImage(String imageUrl, double width, double height) {
+    if (imageUrl.isEmpty) {
+      return Image.asset('images/default-menu.jpg',
+          width: width, height: height, fit: BoxFit.cover);
+    } else {
+      return Image.network(imageUrl,
+          width: width, height: height, fit: BoxFit.cover);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -77,14 +87,8 @@ class _MenuCardState extends State<MenuCard> {
                     children: [
                         Stack(
                           children: [
-                            Image.network(
-                                // 'https://gbstorage.sgp1.digitaloceanspaces.com/assets/dev/a/f89c0d84ed1db2e3.png',
-                                widget.menu['image'] != ''
-                                    ? widget.menu['image']
-                                    : 'https://placehold.co/200/png',
-                                width: double.infinity,
-                                height: widget.menu['imageSize'],
-                                fit: BoxFit.cover),
+                            renderImage(widget.menu['image'], double.infinity,
+                                widget.menu['imageSize']),
                             Positioned(
                                 right: 10,
                                 top: 10,
@@ -180,14 +184,8 @@ class _MenuCardState extends State<MenuCard> {
                     children: [
                       Stack(
                         children: [
-                          Image.network(
-                              // 'https://gbstorage.sgp1.digitaloceanspaces.com/assets/dev/a/f89c0d84ed1db2e3.png',
-                              widget.menu['image'] != ''
-                                  ? widget.menu['image']
-                                  : 'https://placehold.co/200/png',
-                              width: 108,
-                              height: double.infinity,
-                              fit: BoxFit.cover),
+                          renderImage(
+                              widget.menu['image'], 108, double.infinity),
                           Positioned(
                               left: 10,
                               bottom: 10,

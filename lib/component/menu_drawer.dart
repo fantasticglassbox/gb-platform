@@ -499,6 +499,16 @@ class _MenuDrawerState extends State<MenuDrawer> {
     }
   }
 
+  Widget renderImage(String imageUrl) {
+    if (imageUrl.isEmpty) {
+      return Image.asset('images/default-menu.jpg',
+          width: double.infinity, height: 218, fit: BoxFit.cover);
+    } else {
+      return Image.network(imageUrl,
+          width: double.infinity, height: 218, fit: BoxFit.cover);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
@@ -524,19 +534,9 @@ class _MenuDrawerState extends State<MenuDrawer> {
                   children: [
                     Stack(
                       children: [
-                        Image.network(
-                            // 'https://gbstorage.sgp1.digitaloceanspaces.com/assets/dev/a/f89c0d84ed1db2e3.png',
-                            context
-                                        .watch<MenuProvider>()
-                                        .activeMenu['menuImage'] !=
-                                    ''
-                                ? context
-                                    .watch<MenuProvider>()
-                                    .activeMenu['menuImage']
-                                : 'https://placehold.co/200/png',
-                            width: double.infinity,
-                            height: 218,
-                            fit: BoxFit.cover),
+                        renderImage(context
+                            .watch<MenuProvider>()
+                            .activeMenu['menuImage']),
                         Positioned(
                             right: 10,
                             top: 10,

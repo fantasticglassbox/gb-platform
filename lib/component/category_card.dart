@@ -22,6 +22,28 @@ class CategoryCard extends StatefulWidget {
 }
 
 class _CategoryCardState extends State<CategoryCard> {
+  Widget renderImage(String imageUrl) {
+    if (imageUrl.isEmpty) {
+      String imageName = '';
+
+      if (widget.textIcon == 'trending') {
+        imageName = 'images/default-trending.jpg';
+      } else if (widget.textIcon == 'new') {
+        imageName = 'images/default-new.jpg';
+      } else if (widget.textIcon == 'recommended') {
+        imageName = 'images/default-recommended.jpg';
+      } else if (widget.textIcon == 'special-offers') {
+        imageName = 'images/default-special-offers.jpg';
+      }
+
+      return Image.asset(imageName,
+          width: double.infinity, height: 133.sp, fit: BoxFit.cover);
+    } else {
+      return Image.network(
+          width: double.infinity, height: 133.sp, fit: BoxFit.cover, imageUrl);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -34,11 +56,7 @@ class _CategoryCardState extends State<CategoryCard> {
           },
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Image.network(
-                width: double.infinity,
-                height: 133.sp,
-                fit: BoxFit.cover,
-                widget.imageUrl),
+            renderImage(widget.imageUrl),
             Container(
               padding: const EdgeInsets.all(8.0),
               child: Row(children: [

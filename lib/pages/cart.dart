@@ -92,6 +92,16 @@ class _CartPageState extends State<CartPage> {
     }
   }
 
+  Widget renderImage(String imageUrl) {
+    if (imageUrl.isEmpty) {
+      return Image.asset('images/default-menu.jpg',
+          width: 128, height: 128, fit: BoxFit.cover);
+    } else {
+      return Image.network(imageUrl,
+          width: 128, height: 128, fit: BoxFit.cover);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return IdleDetector(
@@ -276,21 +286,10 @@ class _CartPageState extends State<CartPage> {
                                                           CrossAxisAlignment
                                                               .start,
                                                       children: [
-                                                        Image.network(
-                                                            // 'https://gbstorage.sgp1.digitaloceanspaces.com/assets/dev/a/f89c0d84ed1db2e3.png',
-                                                            cartList?['items'][
-                                                                            index]
-                                                                        [
-                                                                        'image'] !=
-                                                                    ''
-                                                                ? cartList![
-                                                                        'items']
-                                                                    [
-                                                                    index]['image']
-                                                                : 'https://placehold.co/200/png',
-                                                            width: 128,
-                                                            height: 128,
-                                                            fit: BoxFit.cover),
+                                                        renderImage(
+                                                            cartList!['items']
+                                                                    [index]
+                                                                ['image']),
                                                         const SizedBox(
                                                           width: 16.0,
                                                         ),

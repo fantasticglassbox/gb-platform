@@ -63,8 +63,8 @@ class _LoginPageState extends State<LoginPage> {
     var body = json.encode({
       'device_id': deviceId,
       'device_name': deviceName,
-      // "device_id": "TP1A.220624.014",
-      // "device_name": "samsung:gta7lite",
+      // "device_id": "TKQ1.221114.001",
+      // "device_name": "Redmi:xun",
       'operating_system': operatingSystem
     });
     final response = await http.post(url,
