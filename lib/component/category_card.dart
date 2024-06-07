@@ -24,7 +24,7 @@ class CategoryCard extends StatefulWidget {
 class _CategoryCardState extends State<CategoryCard> {
   Widget renderImage(String imageUrl) {
     if (imageUrl.isEmpty) {
-      String imageName = '';
+      String imageName = 'images/default-trending.jpg';
 
       if (widget.textIcon == 'trending') {
         imageName = 'images/default-trending.jpg';

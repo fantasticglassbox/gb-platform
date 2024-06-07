@@ -524,599 +524,555 @@ class _BillPageState extends State<BillPage> {
 
   @override
   Widget build(BuildContext context) {
-    return IdleDetector(
-        idleTime: const Duration(seconds: 120),
-        onIdle: () {
-          context
-              .read<AppProvider>()
-              .setLastRoute(ModalRoute.of(context)?.settings.name);
-          Navigator.pushReplacementNamed(context, '/');
-        },
-        child: Scaffold(
-          appBar: AppBar(
-            backgroundColor: Colors.white,
-            title: const Text('Your Bill'),
-            centerTitle: true,
-            surfaceTintColor: Colors.white,
-            actions: [Container()],
-          ),
-          endDrawer: BillDrawer(
-            billItem: selectedItemBill,
-            billDate: billDate,
-          ),
-          body: SafeArea(
-              child: Container(
-                  height: double.infinity,
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0),
-                  color: const Color.fromRGBO(247, 247, 247, 1.0),
-                  child: FutureBuilder(
-                      future: futureBill,
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          final data = snapshot.data;
-                          if (data['status'] == 'CLOSED') {
-                            return SingleChildScrollView(
-                              child: Center(
-                                  child: SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.7,
-                                child: Column(
-                                  children: [
-                                    Card(
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: const Text('Your Bill'),
+        centerTitle: true,
+        surfaceTintColor: Colors.white,
+        actions: [Container()],
+      ),
+      endDrawer: BillDrawer(
+        billItem: selectedItemBill,
+        billDate: billDate,
+      ),
+      body: SafeArea(
+          child: Container(
+              height: double.infinity,
+              width: double.infinity,
+              padding:
+                  const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0),
+              color: const Color.fromRGBO(247, 247, 247, 1.0),
+              child: FutureBuilder(
+                  future: futureBill,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      final data = snapshot.data;
+                      if (data['status'] == 'CLOSED') {
+                        return SingleChildScrollView(
+                          child: Center(
+                              child: SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.7,
+                            child: Column(
+                              children: [
+                                Card(
+                                  surfaceTintColor: Colors.white,
+                                  color: Colors.white,
+                                  clipBehavior: Clip.antiAlias,
+                                  child: Container(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Column(
+                                        children: [
+                                          Center(
+                                              child: CircleAvatar(
+                                            radius: 24,
+                                            backgroundImage: NetworkImage(
+                                                context
+                                                    .watch<MerchantProvider>()
+                                                    .logoImage),
+                                          )),
+                                          const SizedBox(
+                                            height: 30,
+                                          ),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text('Bill ID',
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp)),
+                                              Text(data?['id'],
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp)),
+                                            ],
+                                          ),
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text('Date',
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp)),
+                                              Text(
+                                                  getOrderTime(
+                                                      data?['created_at']),
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp))
+                                            ],
+                                          ),
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text('Table ID',
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp)),
+                                              Text(data?['table_no'],
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp))
+                                            ],
+                                          ),
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text('PAX',
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp)),
+                                              Text('$totalPack',
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp))
+                                            ],
+                                          ),
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                          const Divider(
+                                            height: 20,
+                                          ),
+                                          ...renderOrderItems(data?['orders']),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text('Total',
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp)),
+                                              Text(
+                                                  CurrencyFormat.convertToIdr(
+                                                      data?['total']['value'],
+                                                      0),
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp))
+                                            ],
+                                          ),
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text('Service Charge',
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp)),
+                                              Text(
+                                                  CurrencyFormat.convertToIdr(
+                                                      data?['service_fee']
+                                                          ['value'],
+                                                      0),
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp))
+                                            ],
+                                          ),
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text('VAT',
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp)),
+                                              Text(
+                                                  CurrencyFormat.convertToIdr(
+                                                      data?['vat']['value'], 0),
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp))
+                                            ],
+                                          ),
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text('PB1',
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp)),
+                                              Text(
+                                                  CurrencyFormat.convertToIdr(
+                                                      data?['pb1']['value'], 0),
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp))
+                                            ],
+                                          ),
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                          const Divider(
+                                            height: 20,
+                                          ),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                'Grand Total',
+                                                style:
+                                                    TextStyle(fontSize: 20.sp),
+                                              ),
+                                              Text(
+                                                CurrencyFormat.convertToIdr(
+                                                    data?['grand_total']
+                                                        ['value'],
+                                                    0),
+                                                style: TextStyle(
+                                                    fontSize: 20.sp,
+                                                    fontWeight:
+                                                        FontWeight.w600),
+                                              )
+                                            ],
+                                          ),
+                                        ],
+                                      )),
+                                )
+                              ],
+                            ),
+                          )),
+                        );
+                      } else {
+                        return SingleChildScrollView(
+                          child: Center(
+                              child: SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.7,
+                            child: Column(
+                              children: [
+                                ...data?['orders'].map((item) {
+                                  return Card(
                                       surfaceTintColor: Colors.white,
                                       color: Colors.white,
                                       clipBehavior: Clip.antiAlias,
-                                      child: Container(
-                                          padding: const EdgeInsets.all(16.0),
-                                          child: Column(
-                                            children: [
-                                              Center(
-                                                  child: CircleAvatar(
-                                                radius: 24,
-                                                backgroundImage: NetworkImage(
-                                                    context
-                                                        .watch<
-                                                            MerchantProvider>()
-                                                        .logoImage),
-                                              )),
-                                              const SizedBox(
-                                                height: 30,
-                                              ),
-                                              Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
+                                      child: Builder(builder: (context) {
+                                        return InkWell(
+                                          onTap: () {
+                                            setState(() {
+                                              selectedItemBill = item;
+                                              billDate = data['created_at'];
+                                            });
+                                            Scaffold.of(context)
+                                                .openEndDrawer();
+                                          },
+                                          child: Container(
+                                              padding:
+                                                  const EdgeInsets.all(16.0),
+                                              child: Column(
                                                 children: [
-                                                  Text('Bill ID',
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp)),
-                                                  Text(data?['id'],
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp)),
-                                                ],
-                                              ),
-                                              const SizedBox(
-                                                height: 10,
-                                              ),
-                                              Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text('Date',
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp)),
-                                                  Text(
-                                                      getOrderTime(
-                                                          data?['created_at']),
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp))
-                                                ],
-                                              ),
-                                              const SizedBox(
-                                                height: 10,
-                                              ),
-                                              Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text('Table ID',
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp)),
-                                                  Text(data?['table_no'],
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp))
-                                                ],
-                                              ),
-                                              const SizedBox(
-                                                height: 10,
-                                              ),
-                                              Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text('PAX',
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp)),
-                                                  Text('$totalPack',
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp))
-                                                ],
-                                              ),
-                                              const SizedBox(
-                                                height: 10,
-                                              ),
-                                              const Divider(
-                                                height: 20,
-                                              ),
-                                              ...renderOrderItems(
-                                                  data?['orders']),
-                                              Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text('Total',
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp)),
-                                                  Text(
-                                                      CurrencyFormat
-                                                          .convertToIdr(
-                                                              data?['total']
-                                                                  ['value'],
-                                                              0),
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp))
-                                                ],
-                                              ),
-                                              const SizedBox(
-                                                height: 10,
-                                              ),
-                                              Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text('Service Charge',
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp)),
-                                                  Text(
-                                                      CurrencyFormat.convertToIdr(
-                                                          data?['service_fee']
-                                                              ['value'],
-                                                          0),
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp))
-                                                ],
-                                              ),
-                                              const SizedBox(
-                                                height: 10,
-                                              ),
-                                              Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text('VAT',
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp)),
-                                                  Text(
-                                                      CurrencyFormat
-                                                          .convertToIdr(
-                                                              data?['vat']
-                                                                  ['value'],
-                                                              0),
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp))
-                                                ],
-                                              ),
-                                              const SizedBox(
-                                                height: 10,
-                                              ),
-                                              Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text('PB1',
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp)),
-                                                  Text(
-                                                      CurrencyFormat
-                                                          .convertToIdr(
-                                                              data?['pb1']
-                                                                  ['value'],
-                                                              0),
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp))
-                                                ],
-                                              ),
-                                              const SizedBox(
-                                                height: 10,
-                                              ),
-                                              const Divider(
-                                                height: 20,
-                                              ),
-                                              Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text(
-                                                    'Grand Total',
-                                                    style: TextStyle(
-                                                        fontSize: 20.sp),
-                                                  ),
-                                                  Text(
-                                                    CurrencyFormat.convertToIdr(
-                                                        data?['grand_total']
-                                                            ['value'],
-                                                        0),
-                                                    style: TextStyle(
-                                                        fontSize: 20.sp,
-                                                        fontWeight:
-                                                            FontWeight.w600),
-                                                  )
-                                                ],
-                                              ),
-                                            ],
-                                          )),
-                                    )
-                                  ],
-                                ),
-                              )),
-                            );
-                          } else {
-                            return SingleChildScrollView(
-                              child: Center(
-                                  child: SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.7,
-                                child: Column(
-                                  children: [
-                                    ...data?['orders'].map((item) {
-                                      return Card(
-                                          surfaceTintColor: Colors.white,
-                                          color: Colors.white,
-                                          clipBehavior: Clip.antiAlias,
-                                          child: Builder(builder: (context) {
-                                            return InkWell(
-                                              onTap: () {
-                                                setState(() {
-                                                  selectedItemBill = item;
-                                                  billDate = data['created_at'];
-                                                });
-                                                Scaffold.of(context)
-                                                    .openEndDrawer();
-                                              },
-                                              child: Container(
-                                                  padding: const EdgeInsets.all(
-                                                      16.0),
-                                                  child: Column(
+                                                  Row(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
                                                     children: [
-                                                      Row(
+                                                      Column(
                                                         crossAxisAlignment:
                                                             CrossAxisAlignment
                                                                 .start,
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .spaceBetween,
                                                         children: [
-                                                          Column(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
-                                                            children: [
-                                                              BillStatusBadge(
-                                                                  status: item[
-                                                                      'status']),
-                                                              const SizedBox(
-                                                                height: 5,
-                                                              ),
-                                                              Text(
-                                                                'Order ${item['short_id']}',
-                                                                style: TextStyle(
-                                                                    fontSize:
-                                                                        20.sp),
-                                                              ),
-                                                            ],
+                                                          BillStatusBadge(
+                                                              status: item[
+                                                                  'status']),
+                                                          const SizedBox(
+                                                            height: 5,
                                                           ),
-                                                          const Column(
-                                                            mainAxisAlignment:
-                                                                MainAxisAlignment
-                                                                    .start,
-                                                            children: [
-                                                              FaIcon(
-                                                                FontAwesomeIcons
-                                                                    .arrowRight,
-                                                                size: 18.0,
-                                                                color: Color(
-                                                                    0xffA1A4AC),
-                                                              ),
-                                                            ],
-                                                          )
+                                                          Text(
+                                                            'Order ${item['short_id']}',
+                                                            style: TextStyle(
+                                                                fontSize:
+                                                                    20.sp),
+                                                          ),
                                                         ],
                                                       ),
-                                                      const SizedBox(
-                                                        height: 10,
-                                                      ),
-                                                      Row(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
+                                                      const Column(
                                                         mainAxisAlignment:
                                                             MainAxisAlignment
-                                                                .spaceBetween,
+                                                                .start,
                                                         children: [
-                                                          Text(
-                                                              'Total ${item['items'].length} items',
-                                                              style: TextStyle(
-                                                                  fontSize:
-                                                                      16.sp)),
-                                                          Text(
-                                                              CurrencyFormat
-                                                                  .convertToIdr(
-                                                                      item['total']
-                                                                          [
-                                                                          'value'],
-                                                                      0),
-                                                              style: TextStyle(
-                                                                  fontSize:
-                                                                      16.sp))
+                                                          FaIcon(
+                                                            FontAwesomeIcons
+                                                                .arrowRight,
+                                                            size: 18.0,
+                                                            color: Color(
+                                                                0xffA1A4AC),
+                                                          ),
                                                         ],
                                                       )
                                                     ],
-                                                  )),
-                                            );
-                                          }));
-                                    }).toList(),
-                                    Card(
-                                      surfaceTintColor: Colors.white,
-                                      color: Colors.white,
-                                      clipBehavior: Clip.antiAlias,
-                                      child: Container(
-                                          padding: const EdgeInsets.all(16.0),
-                                          child: Column(
-                                            children: [
-                                              Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text('Total',
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp)),
-                                                  Text(
-                                                      CurrencyFormat
-                                                          .convertToIdr(
-                                                              data?['total']
-                                                                  ['value'],
-                                                              0),
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp))
-                                                ],
-                                              ),
-                                              const SizedBox(
-                                                height: 10,
-                                              ),
-                                              Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text('Service Charge',
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp)),
-                                                  Text(
-                                                      CurrencyFormat.convertToIdr(
-                                                          data?['service_fee']
-                                                              ['value'],
-                                                          0),
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp))
-                                                ],
-                                              ),
-                                              const SizedBox(
-                                                height: 10,
-                                              ),
-                                              Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text('VAT',
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp)),
-                                                  Text(
-                                                      CurrencyFormat
-                                                          .convertToIdr(
-                                                              data?['vat']
-                                                                  ['value'],
-                                                              0),
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp))
-                                                ],
-                                              ),
-                                              const SizedBox(
-                                                height: 10,
-                                              ),
-                                              Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text('PB1',
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp)),
-                                                  Text(
-                                                      CurrencyFormat
-                                                          .convertToIdr(
-                                                              data?['pb1']
-                                                                  ['value'],
-                                                              0),
-                                                      style: TextStyle(
-                                                          fontSize: 16.sp))
-                                                ],
-                                              ),
-                                              const SizedBox(
-                                                height: 10,
-                                              ),
-                                              const Divider(
-                                                height: 20,
-                                              ),
-                                              Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text(
-                                                    'Grand Total',
-                                                    style: TextStyle(
-                                                        fontSize: 20.sp),
                                                   ),
-                                                  Text(
-                                                    CurrencyFormat.convertToIdr(
-                                                        data?['grand_total']
-                                                            ['value'],
-                                                        0),
-                                                    style: TextStyle(
-                                                        fontSize: 20.sp,
-                                                        fontWeight:
-                                                            FontWeight.w600),
+                                                  const SizedBox(
+                                                    height: 10,
+                                                  ),
+                                                  Row(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                          'Total ${item['items'].length} items',
+                                                          style: TextStyle(
+                                                              fontSize: 16.sp)),
+                                                      Text(
+                                                          CurrencyFormat
+                                                              .convertToIdr(
+                                                                  item['total']
+                                                                      ['value'],
+                                                                  0),
+                                                          style: TextStyle(
+                                                              fontSize: 16.sp))
+                                                    ],
                                                   )
                                                 ],
-                                              ),
+                                              )),
+                                        );
+                                      }));
+                                }).toList(),
+                                Card(
+                                  surfaceTintColor: Colors.white,
+                                  color: Colors.white,
+                                  clipBehavior: Clip.antiAlias,
+                                  child: Container(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Column(
+                                        children: [
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text('Total',
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp)),
+                                              Text(
+                                                  CurrencyFormat.convertToIdr(
+                                                      data?['total']['value'],
+                                                      0),
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp))
                                             ],
-                                          )),
-                                    )
-                                  ],
-                                ),
-                              )),
-                            );
-                          }
-                        } else if (snapshot.hasError) {
-                          return Text('Error ${snapshot.error}');
-                        } else if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const FaIcon(
-                                FontAwesomeIcons.receipt,
-                                size: 60,
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              Text(
-                                  "Every time you checkout orders, they'll appear here.",
-                                  style: TextStyle(fontSize: 16.sp)),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors
-                                        .white, //change background color of button
-                                    backgroundColor:
-                                        Theme.of(context).primaryColor),
-                                onPressed: () {
-                                  context
-                                      .read<AppProvider>()
-                                      .setActiveNavigationRailIndex(1);
-                                  Navigator.pushNamed(context, '/main');
-                                },
-                                child: Text('Add More',
-                                    style: TextStyle(fontSize: 16.sp)),
-                              ),
-                            ],
-                          ),
+                                          ),
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text('Service Charge',
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp)),
+                                              Text(
+                                                  CurrencyFormat.convertToIdr(
+                                                      data?['service_fee']
+                                                          ['value'],
+                                                      0),
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp))
+                                            ],
+                                          ),
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text('VAT',
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp)),
+                                              Text(
+                                                  CurrencyFormat.convertToIdr(
+                                                      data?['vat']['value'], 0),
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp))
+                                            ],
+                                          ),
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text('PB1',
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp)),
+                                              Text(
+                                                  CurrencyFormat.convertToIdr(
+                                                      data?['pb1']['value'], 0),
+                                                  style: TextStyle(
+                                                      fontSize: 16.sp))
+                                            ],
+                                          ),
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                          const Divider(
+                                            height: 20,
+                                          ),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                'Grand Total',
+                                                style:
+                                                    TextStyle(fontSize: 20.sp),
+                                              ),
+                                              Text(
+                                                CurrencyFormat.convertToIdr(
+                                                    data?['grand_total']
+                                                        ['value'],
+                                                    0),
+                                                style: TextStyle(
+                                                    fontSize: 20.sp,
+                                                    fontWeight:
+                                                        FontWeight.w600),
+                                              )
+                                            ],
+                                          ),
+                                        ],
+                                      )),
+                                )
+                              ],
+                            ),
+                          )),
                         );
-                      }))),
-          bottomNavigationBar: FutureBuilder(
-              future: futureBill,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final data = snapshot.data;
-                  return Container(
-                    padding: const EdgeInsets.all(8.0),
-                    clipBehavior: Clip.antiAlias,
-                    decoration:
-                        const BoxDecoration(color: Colors.white, boxShadow: [
-                      BoxShadow(
-                        offset: Offset(
-                          5.0,
-                          5.0,
-                        ),
-                        blurRadius: 5.0,
-                        spreadRadius: 2.0,
-                      ),
-                    ]),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Expanded(
-                            child: Row(
-                          children: [
-                            Text('Grand Total',
-                                style: TextStyle(fontSize: 16.sp)),
-                            const SizedBox(
-                              width: 10,
-                            ),
-                            Text(
-                              CurrencyFormat.convertToIdr(
-                                  data?['grand_total']['value'], 0),
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w600, fontSize: 20.sp),
-                            ),
-                          ],
-                        )),
-                        ...renderBottomNavButton(data['status'] == 'CLOSED')
-                      ],
-                    ),
-                  );
-                } else if (snapshot.hasError) {
-                  return Text('Error ${snapshot.error}');
-                }
+                      }
+                    } else if (snapshot.hasError) {
+                      return Text('Error ${snapshot.error}');
+                    } else if (snapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
 
-                return const SizedBox();
-              }),
-        ));
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const FaIcon(
+                            FontAwesomeIcons.receipt,
+                            size: 60,
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Text(
+                              "Every time you checkout orders, they'll appear here.",
+                              style: TextStyle(fontSize: 16.sp)),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                foregroundColor: Colors
+                                    .white, //change background color of button
+                                backgroundColor:
+                                    Theme.of(context).primaryColor),
+                            onPressed: () {
+                              context
+                                  .read<AppProvider>()
+                                  .setActiveNavigationRailIndex(1);
+                              Navigator.pushNamed(context, '/main');
+                            },
+                            child: Text('Add More',
+                                style: TextStyle(fontSize: 16.sp)),
+                          ),
+                        ],
+                      ),
+                    );
+                  }))),
+      bottomNavigationBar: FutureBuilder(
+          future: futureBill,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              final data = snapshot.data;
+              return Container(
+                padding: const EdgeInsets.all(8.0),
+                clipBehavior: Clip.antiAlias,
+                decoration:
+                    const BoxDecoration(color: Colors.white, boxShadow: [
+                  BoxShadow(
+                    offset: Offset(
+                      5.0,
+                      5.0,
+                    ),
+                    blurRadius: 5.0,
+                    spreadRadius: 2.0,
+                  ),
+                ]),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Expanded(
+                        child: Row(
+                      children: [
+                        Text('Grand Total', style: TextStyle(fontSize: 16.sp)),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        Text(
+                          CurrencyFormat.convertToIdr(
+                              data?['grand_total']['value'], 0),
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 20.sp),
+                        ),
+                      ],
+                    )),
+                    ...renderBottomNavButton(data['status'] == 'CLOSED')
+                  ],
+                ),
+              );
+            } else if (snapshot.hasError) {
+              return Text('Error ${snapshot.error}');
+            }
+
+            return const SizedBox();
+          }),
+    );
   }
 }
