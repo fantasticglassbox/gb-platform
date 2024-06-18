@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:glassbox/model/ads.dart';
+import 'package:glassbox/utils/shared_preference.dart';
 import 'package:video_player/video_player.dart';
+import 'package:http/http.dart' as http;
 
 class Carousel extends StatefulWidget {
   final List<AdsModel> ads;
@@ -15,10 +19,12 @@ class Carousel extends StatefulWidget {
 }
 
 class _CarouselState extends State<Carousel> {
+  final _storage = const FlutterSecureStorage();
   List controllerList = [];
   CarouselController buttonCarouselController = CarouselController();
   late Future<List<Widget>> futureAdsList;
   bool isAdsFetched = false;
+  int adsCounter = 0;
 
   Timer? _timer;
   int currentAdsDuration = 10;
@@ -27,11 +33,17 @@ class _CarouselState extends State<Carousel> {
     const oneSec = Duration(seconds: 1);
     _timer = Timer.periodic(
       oneSec,
-      (Timer timer) {
+      (Timer timer) async {
         if (currentAdsDuration == 0) {
-          setState(() {
-            buttonCarouselController.nextPage();
-          });
+          buttonCarouselController.nextPage();
+
+          var url = Uri.https('api.glassbox.id',
+              '/v1/advertisements/${widget.ads[adsCounter].id}/complete');
+          final token = await _storage.readAll(
+            aOptions: getAndroidOptions(),
+          );
+          await http.post(url,
+              headers: {'Authorization': 'Bearer ${token['access_token']}'});
         } else {
           setState(() {
             currentAdsDuration--;
@@ -122,6 +134,11 @@ class _CarouselState extends State<Carousel> {
                     onPageChanged: (index, reason) {
                       setState(() {
                         currentAdsDuration = widget.ads[index].duration;
+                        if (adsCounter + 1 < widget.ads.length) {
+                          adsCounter++;
+                        } else {
+                          adsCounter = 0;
+                        }
                       });
                       if (widget.ads[index].type == 'VIDEO') {
                         controllerList[index].initialize();

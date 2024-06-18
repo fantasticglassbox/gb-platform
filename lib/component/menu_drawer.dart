@@ -8,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:glassbox/model/menu_modifier.dart';
+import 'package:glassbox/providers/app.dart';
 import 'package:glassbox/providers/cart.dart';
 import 'package:glassbox/providers/menu.dart';
 import 'package:glassbox/utils/currency.dart';
@@ -500,7 +501,7 @@ class _MenuDrawerState extends State<MenuDrawer> {
   }
 
   Widget renderImage(String imageUrl) {
-    if (imageUrl.isEmpty) {
+    if (imageUrl.isEmpty || context.read<AppProvider>().setting.defaultImage) {
       return Image.asset('images/default-menu.jpg',
           width: double.infinity, height: 218, fit: BoxFit.cover);
     } else {

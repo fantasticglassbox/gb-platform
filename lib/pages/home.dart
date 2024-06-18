@@ -9,6 +9,7 @@ import 'package:glassbox/layout/layout.dart';
 import 'package:glassbox/model/ads.dart';
 import 'package:glassbox/model/home_category.dart';
 import 'package:glassbox/providers/ads.dart';
+import 'package:glassbox/providers/app.dart';
 import 'package:glassbox/providers/menu.dart';
 import 'package:glassbox/providers/merchant.dart';
 import 'package:glassbox/utils/shared_preference.dart';
@@ -95,7 +96,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   }
 
   Widget renderImage(String imageUrl) {
-    if (imageUrl.isEmpty) {
+    if (imageUrl.isEmpty || context.read<AppProvider>().setting.defaultImage) {
       return Image.asset('images/default-home-banner.png',
           fit: BoxFit.cover,
           width: double.infinity,

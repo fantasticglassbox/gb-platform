@@ -64,7 +64,7 @@ class _MenuCardState extends State<MenuCard> {
   }
 
   Widget renderImage(String imageUrl, double width, double height) {
-    if (imageUrl.isEmpty) {
+    if (imageUrl.isEmpty || context.read<AppProvider>().setting.defaultImage) {
       return Image.asset('images/default-menu.jpg',
           width: width, height: height, fit: BoxFit.cover);
     } else {

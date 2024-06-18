@@ -93,7 +93,7 @@ class _CartPageState extends State<CartPage> {
   }
 
   Widget renderImage(String imageUrl) {
-    if (imageUrl.isEmpty) {
+    if (imageUrl.isEmpty || context.read<AppProvider>().setting.defaultImage) {
       return Image.asset('images/default-menu.jpg',
           width: 128, height: 128, fit: BoxFit.cover);
     } else {

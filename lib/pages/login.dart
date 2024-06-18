@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:glassbox/model/ads.dart';
+import 'package:glassbox/model/setting.dart';
 import 'package:glassbox/providers/ads.dart';
 import 'package:glassbox/providers/app.dart';
 import 'package:glassbox/providers/merchant.dart';
@@ -63,8 +64,6 @@ class _LoginPageState extends State<LoginPage> {
     var body = json.encode({
       'device_id': deviceId,
       'device_name': deviceName,
-      // "device_id": "TKQ1.221114.001",
-      // "device_name": "Redmi:xun",
       'operating_system': operatingSystem
     });
     final response = await http.post(url,
@@ -89,8 +88,14 @@ class _LoginPageState extends State<LoginPage> {
             bodyData['account_info']['place_holder_image'];
 
         var urlSession = Uri.https('api.glassbox.id', '/v1/sessions/current');
+        var settingConfig = Uri.https('api.glassbox.id', '/v1/settings');
 
         final responseSession = await http.post(urlSession, headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${bodyData['access_token']}'
+        });
+
+        final settingResponse = await http.get(settingConfig, headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${bodyData['access_token']}'
         });
@@ -98,6 +103,14 @@ class _LoginPageState extends State<LoginPage> {
         var bodyDataSession = json.decode(responseSession.body);
 
         String status = '';
+
+        if (settingResponse.statusCode == 200) {
+          var bodyDataSetting = json.decode(settingResponse.body);
+          SettingModel setting = SettingModel(
+              enableOrdering: bodyDataSetting['enable_ordering'],
+              defaultImage: bodyDataSetting['default_image']);
+          context.read<AppProvider>().setSetting(setting);
+        }
 
         if (responseSession.statusCode >= 200 &&
             responseSession.statusCode <= 300) {

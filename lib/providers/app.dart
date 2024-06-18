@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:glassbox/model/setting.dart';
 
 class AppProvider with ChangeNotifier, DiagnosticableTreeMixin {
   int _activeNavigationRailIndex = 0;
@@ -10,6 +11,8 @@ class AppProvider with ChangeNotifier, DiagnosticableTreeMixin {
   String _recommendedId = '';
   String _sessionStatus = '';
   String _lastRoute = '';
+  SettingModel _setting =
+      SettingModel(enableOrdering: true, defaultImage: true);
 
   int get activeNavigationRailIndex => _activeNavigationRailIndex;
   String get recommendedId => _recommendedId;
@@ -17,8 +20,14 @@ class AppProvider with ChangeNotifier, DiagnosticableTreeMixin {
   String get lastRoute => _lastRoute;
   int get tabPosition => _tabPosition;
   GlobalKey<ScaffoldState> get key => _key;
+  SettingModel get setting => _setting;
 
   bool get isMenuDrawer => _isMenuDrawer;
+
+  void setSetting(SettingModel setting) {
+    _setting = setting;
+    notifyListeners();
+  }
 
   void setActiveNavigationRailIndex(int index) {
     _activeNavigationRailIndex = index;

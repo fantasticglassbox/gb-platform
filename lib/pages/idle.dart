@@ -74,52 +74,59 @@ class _IdleState extends State<Idle> {
               ))
         ],
       ))),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Theme.of(context).primaryColor,
-        onPressed: () async {
-          if (context.read<AppProvider>().sessionStatus == 'INACTIVE') {
-            final totalPack = await openDialog();
-            if (totalPack == null || totalPack.isEmpty) return;
-            if (context.mounted) {
-              var url = Uri.https('api.glassbox.id', '/v1/sessions/start');
-              var body = json.encode({'pax_number': int.parse(totalPack)});
+      floatingActionButton: context.read<AppProvider>().setting.enableOrdering
+          ? FloatingActionButton.extended(
+              backgroundColor: Theme.of(context).primaryColor,
+              onPressed: () async {
+                if (context.read<AppProvider>().sessionStatus == 'INACTIVE') {
+                  final totalPack = await openDialog();
+                  if (totalPack == null || totalPack.isEmpty) return;
+                  if (context.mounted) {
+                    var url =
+                        Uri.https('api.glassbox.id', '/v1/sessions/start');
+                    var body =
+                        json.encode({'pax_number': int.parse(totalPack)});
 
-              final token = await _storage.readAll(
-                aOptions: getAndroidOptions(),
-              );
+                    final token = await _storage.readAll(
+                      aOptions: getAndroidOptions(),
+                    );
 
-              final response = await http.post(url,
-                  headers: {
-                    "Content-Type": "application/json",
-                    'Authorization': 'Bearer ${token['access_token']}'
-                  },
-                  body: body);
+                    final response = await http.post(url,
+                        headers: {
+                          "Content-Type": "application/json",
+                          'Authorization': 'Bearer ${token['access_token']}'
+                        },
+                        body: body);
 
-              if (response.statusCode >= 200 && response.statusCode <= 300) {
-                await _storage.write(
-                    key: 'total_pack',
-                    value: totalPack,
-                    aOptions: getAndroidOptions());
-                context.read<AppProvider>().setActiveNavigationRailIndex(0);
-                Navigator.pushReplacementNamed(context, '/main');
-              } else {
-                throw Exception('Failed to create session');
-              }
-            }
-          } else {
-            Navigator.pushReplacementNamed(
-                context, context.read<AppProvider>().lastRoute);
-          }
-        },
-        icon: const Icon(
-          Icons.skip_next,
-          color: Colors.white,
-        ),
-        label: Text(
-          'Close Ad',
-          style: TextStyle(color: Colors.white, fontSize: 14.sp),
-        ),
-      ),
+                    if (response.statusCode >= 200 &&
+                        response.statusCode <= 300) {
+                      await _storage.write(
+                          key: 'total_pack',
+                          value: totalPack,
+                          aOptions: getAndroidOptions());
+                      context
+                          .read<AppProvider>()
+                          .setActiveNavigationRailIndex(0);
+                      Navigator.pushReplacementNamed(context, '/main');
+                    } else {
+                      throw Exception('Failed to create session');
+                    }
+                  }
+                } else {
+                  Navigator.pushReplacementNamed(
+                      context, context.read<AppProvider>().lastRoute);
+                }
+              },
+              icon: const Icon(
+                Icons.skip_next,
+                color: Colors.white,
+              ),
+              label: Text(
+                'Close Ad',
+                style: TextStyle(color: Colors.white, fontSize: 14.sp),
+              ),
+            )
+          : const SizedBox(),
     );
   }
 

@@ -23,7 +23,7 @@ class CategoryCard extends StatefulWidget {
 
 class _CategoryCardState extends State<CategoryCard> {
   Widget renderImage(String imageUrl) {
-    if (imageUrl.isEmpty) {
+    if (imageUrl.isEmpty || context.read<AppProvider>().setting.defaultImage) {
       String imageName = 'images/default-trending.jpg';
 
       if (widget.textIcon == 'trending') {
