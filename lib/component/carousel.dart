@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:glassbox/model/ads.dart';
@@ -19,6 +20,7 @@ class Carousel extends StatefulWidget {
 }
 
 class _CarouselState extends State<Carousel> {
+  final BaseCacheManager _cacheManager = DefaultCacheManager();
   final _storage = const FlutterSecureStorage();
   List controllerList = [];
   CarouselController buttonCarouselController = CarouselController();
@@ -71,21 +73,48 @@ class _CarouselState extends State<Carousel> {
     super.deactivate();
   }
 
+  Future<FileInfo?> getCachedAsset(String url) async {
+    final cachedAsset = await _cacheManager.getFileFromCache(url);
+    if (cachedAsset == null) {
+      debugPrint('GLASSBOX: no assets in cache: $url');
+      debugPrint('GLASSBOX: saving assets in cache...');
+      unawaited(_cacheManager.downloadFile(url));
+    } else {
+      debugPrint('GLASSBOX: $url is from cache');
+    }
+    return cachedAsset;
+  }
+
   Future<List<Widget>> getAdsList() async {
     List<Widget> mediaList = [];
     for (var element in widget.ads) {
+      final cachedAsset = await getCachedAsset(element.content);
       if (element.type == 'IMAGE') {
-        mediaList.add(Image.network(
-          element.content,
-          height: double.infinity,
-          width: double.infinity,
-          alignment: Alignment.center,
-          fit: BoxFit.cover,
-        ));
+        if (cachedAsset == null) {
+          mediaList.add(Image.network(
+            element.content,
+            height: double.infinity,
+            width: double.infinity,
+            alignment: Alignment.center,
+            fit: BoxFit.cover,
+          ));
+        } else {
+          mediaList.add(Image.file(
+            cachedAsset.file,
+            height: double.infinity,
+            width: double.infinity,
+            alignment: Alignment.center,
+            fit: BoxFit.cover,
+          ));
+        }
         controllerList.add(null);
       } else {
         VideoPlayerController controller =
             VideoPlayerController.networkUrl(Uri.parse(element.content));
+
+        if (cachedAsset != null) {
+          controller = VideoPlayerController.file(cachedAsset.file);
+        }
 
         mediaList.add(Stack(
           children: [
