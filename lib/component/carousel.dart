@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
@@ -79,9 +78,17 @@ class _CarouselState extends State<Carousel> {
       debugPrint('GLASSBOX: no assets in cache: $url');
       debugPrint('GLASSBOX: saving assets in cache...');
       unawaited(_cacheManager.downloadFile(url));
-    } else {
-      debugPrint('GLASSBOX: $url is from cache');
+      return null;
     }
+
+    bool isCacheExpired = DateTime.now().isAfter(cachedAsset.validTill);
+
+    if (isCacheExpired) {
+      await _cacheManager.removeFile(url);
+      return null;
+    }
+
+    debugPrint('GLASSBOX: $url is from cache');
     return cachedAsset;
   }
 
