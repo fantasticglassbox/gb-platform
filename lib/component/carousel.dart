@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:carousel_slider/carousel_controller.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -22,10 +23,12 @@ class _CarouselState extends State<Carousel> {
   final BaseCacheManager _cacheManager = DefaultCacheManager();
   final _storage = const FlutterSecureStorage();
   List controllerList = [];
-  CarouselController buttonCarouselController = CarouselController();
+  CarouselSliderController buttonCarouselController =
+      CarouselSliderController();
   late Future<List<Widget>> futureAdsList;
   bool isAdsFetched = false;
   int adsCounter = 0;
+  List currentImageAspectRatio = [];
 
   Timer? _timer;
   int currentAdsDuration = 10;
@@ -105,6 +108,25 @@ class _CarouselState extends State<Carousel> {
             alignment: Alignment.center,
             fit: BoxFit.cover,
           ));
+          final image = NetworkImage(element.content);
+          final completer = Completer<ImageInfo>();
+
+          // Create image stream and listener
+          final ImageStream stream = image.resolve(ImageConfiguration.empty);
+          final ImageStreamListener listener =
+              ImageStreamListener((ImageInfo info, bool _) {
+            completer.complete(info);
+          });
+
+          // Add listener and remove it once done
+          stream.addListener(listener);
+          final imageInfo = await completer.future;
+          stream.removeListener(listener);
+
+          // Get image dimensions
+          final imageWidth = imageInfo.image.width.toDouble();
+          final imageHeight = imageInfo.image.height.toDouble();
+          currentImageAspectRatio.add(imageWidth / imageHeight);
         } else {
           mediaList.add(Image.file(
             cachedAsset.file,
@@ -113,6 +135,25 @@ class _CarouselState extends State<Carousel> {
             alignment: Alignment.center,
             fit: BoxFit.cover,
           ));
+          final image = FileImage(cachedAsset.file);
+          final completer = Completer<ImageInfo>();
+
+          // Create image stream and listener
+          final ImageStream stream = image.resolve(ImageConfiguration.empty);
+          final ImageStreamListener listener =
+              ImageStreamListener((ImageInfo info, bool _) {
+            completer.complete(info);
+          });
+
+          // Add listener and remove it once done
+          stream.addListener(listener);
+          final imageInfo = await completer.future;
+          stream.removeListener(listener);
+
+          // Get image dimensions
+          final imageWidth = imageInfo.image.width.toDouble();
+          final imageHeight = imageInfo.image.height.toDouble();
+          currentImageAspectRatio.add(imageWidth / imageHeight);
         }
         controllerList.add(null);
       } else {
@@ -135,6 +176,7 @@ class _CarouselState extends State<Carousel> {
         ));
         controller.setLooping(true);
         controllerList.add(controller);
+        currentImageAspectRatio.add(16 / 9);
       }
     }
 
@@ -165,6 +207,7 @@ class _CarouselState extends State<Carousel> {
                   return item;
                 }).toList(),
                 options: CarouselOptions(
+                    aspectRatio: currentImageAspectRatio[adsCounter],
                     clipBehavior: Clip.antiAlias,
                     autoPlayCurve: Curves.easeInOutSine,
                     onPageChanged: (index, reason) {
