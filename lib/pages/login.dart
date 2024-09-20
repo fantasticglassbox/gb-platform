@@ -13,6 +13,7 @@ import 'package:glassbox/providers/merchant.dart';
 import 'package:glassbox/utils/shared_preference.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:android_id/android_id.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -31,11 +32,15 @@ class _LoginPageState extends State<LoginPage> {
     super.initState();
     initPlatformState();
   }
-
+  Future<String?> getAndroidId() async {
+    final androidIdPlugin = const AndroidId();
+    String? androidId = await androidIdPlugin.getId();
+    return androidId;
+  }
   Future<void> initPlatformState() async {
     var deviceData;
     String os = '';
-
+    DeviceInfoPlugin();
     try {
       if (Platform.isAndroid) {
         deviceData = await deviceInfoPlugin.androidInfo;
@@ -46,9 +51,10 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         return;
       }
-
+      var androidId =  await getAndroidId();
+      print("android id : $androidId");
       await login(
-          deviceData.id, '${deviceData.brand}:${deviceData.device}', os, '{}');
+          androidId!, '${deviceData.brand}:${deviceData.device}', os, '{"model" : ${deviceData.id}}');
     } on PlatformException {
       deviceData = <String, dynamic>{
         'Error:': 'Failed to get platform version.'
