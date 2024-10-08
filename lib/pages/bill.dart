@@ -12,10 +12,9 @@ import 'package:glassbox/providers/app.dart';
 import 'package:glassbox/providers/merchant.dart';
 import 'package:glassbox/utils/currency.dart';
 import 'package:glassbox/utils/shared_preference.dart';
-import 'package:idle_detector_wrapper/idle_detector_wrapper.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
 
 class BillPage extends StatefulWidget {
   const BillPage({super.key});

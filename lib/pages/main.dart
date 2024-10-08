@@ -11,8 +11,8 @@ import 'package:glassbox/providers/app.dart';
 import 'package:glassbox/providers/cart.dart';
 import 'package:glassbox/providers/merchant.dart';
 import 'package:glassbox/utils/shared_preference.dart';
-import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 class MainPage extends StatefulWidget {
   MainPage({Key? key}) : super(key: key);

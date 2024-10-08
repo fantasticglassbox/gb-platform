@@ -8,8 +8,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:glassbox/model/ads.dart';
 import 'package:glassbox/utils/shared_preference.dart';
-import 'package:video_player/video_player.dart';
 import 'package:http/http.dart' as http;
+import 'package:video_player/video_player.dart';
 
 import '../manager/custom_cache_manager.dart';
 class Carousel extends StatefulWidget {
@@ -21,7 +21,6 @@ class Carousel extends StatefulWidget {
 }
 
 class _CarouselState extends State<Carousel> {
-  final BaseCacheManager _cacheManager = DefaultCacheManager();
   final _storage = const FlutterSecureStorage();
   List controllerList = [];
   CarouselController buttonCarouselController = CarouselController();
@@ -39,6 +38,14 @@ class _CarouselState extends State<Carousel> {
           (Timer timer) async {
         if (currentAdsDuration == 0) {
           buttonCarouselController.nextPage();
+
+          var url = Uri.https('api.glassbox.id',
+              '/v1/advertisements/${widget.ads[adsCounter].id}/complete');
+          final token = await _storage.readAll(
+            aOptions: getAndroidOptions(),
+          );
+          await http.post(url,
+              headers: {'Authorization': 'Bearer ${token['access_token']}'});
         } else {
           setState(() {
             currentAdsDuration--;
@@ -112,7 +119,7 @@ class _CarouselState extends State<Carousel> {
                       aspectRatio: aspectRatio, // Use default aspect ratio
                       child: Image(
                         image: imageProvider,
-                        fit: BoxFit.fill,
+                        fit: BoxFit.cover,
                         alignment: Alignment.center,
                       ),
                     );

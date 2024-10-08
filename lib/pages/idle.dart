@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:glassbox/component/carousel.dart';
 import 'package:glassbox/providers/ads.dart';
 import 'package:glassbox/providers/app.dart';
 import 'package:glassbox/providers/merchant.dart';
-import 'package:glassbox/component/carousel.dart';
 import 'package:glassbox/utils/shared_preference.dart';
-import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 class Idle extends StatefulWidget {
   Idle({Key? key}) : super(key: key);

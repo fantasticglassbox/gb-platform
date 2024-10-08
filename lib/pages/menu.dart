@@ -6,20 +6,17 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import 'package:glassbox/component/all_category.dart';
 import 'package:glassbox/component/guideline_drawer.dart';
-import 'package:glassbox/component/menu_card.dart';
 import 'package:glassbox/component/menu_category.dart';
 import 'package:glassbox/component/menu_drawer.dart';
 import 'package:glassbox/layout/layout.dart';
 import 'package:glassbox/model/category.dart';
-import 'package:glassbox/model/menu.dart';
 import 'package:glassbox/providers/app.dart';
 import 'package:glassbox/providers/menu.dart';
 import 'package:glassbox/utils/icon.dart';
 import 'package:glassbox/utils/shared_preference.dart';
-import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class MenuPage extends StatefulWidget {

@@ -14,8 +14,8 @@ import 'package:glassbox/providers/menu.dart';
 import 'package:glassbox/utils/currency.dart';
 import 'package:glassbox/utils/icon.dart';
 import 'package:glassbox/utils/shared_preference.dart';
-import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 class MenuDrawer extends StatefulWidget {
   final String menuId;

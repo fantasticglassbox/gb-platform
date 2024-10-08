@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:android_id/android_id.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,7 +15,6 @@ import 'package:glassbox/providers/merchant.dart';
 import 'package:glassbox/utils/shared_preference.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'package:android_id/android_id.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -25,19 +26,33 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _storage = const FlutterSecureStorage();
   static final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+  static const platform = MethodChannel('wifi_channel');
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+
     initPlatformState();
   }
+  Future<bool> isConnectedToWifi() async {
+    ConnectivityResult connectivityResult = await Connectivity().checkConnectivity();
+
+    if (connectivityResult == ConnectivityResult.wifi) {
+      return true;
+    } else {
+      return false;
+    }
+  }
   Future<String?> getAndroidId() async {
-    final androidIdPlugin = const AndroidId();
-    String? androidId = await androidIdPlugin.getId();
-    return androidId;
+    final String result = await platform.invokeMethod('getAndroidId');
+    return result;
   }
   Future<void> initPlatformState() async {
+    if(!await isConnectedToWifi()){
+      Navigator.pushNamed(context, '/connectivity');
+      return;
+    }
     var deviceData;
     String os = '';
     DeviceInfoPlugin();
