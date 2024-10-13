@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:glassbox/manager/custom_cache_manager.dart';
 import 'package:glassbox/model/ads.dart';
 
 class AdsProvider with ChangeNotifier, DiagnosticableTreeMixin {

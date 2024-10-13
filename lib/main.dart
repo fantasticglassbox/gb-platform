@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:glassbox/manager/custom_cache_manager.dart';
 import 'package:glassbox/pages/cart.dart';
 import 'package:glassbox/pages/connectivity.dart';
 import 'package:glassbox/pages/idle.dart';
 import 'package:glassbox/pages/login.dart';
 import 'package:glassbox/pages/main.dart';
-import 'package:glassbox/pages/wifi.dart';
 import 'package:glassbox/providers/ads.dart';
 import 'package:glassbox/providers/app.dart';
 import 'package:glassbox/providers/cart.dart';
@@ -17,7 +17,6 @@ import 'package:provider/provider.dart';
 
 void main() {
   // BatteryOptimizationManager.requestIgnoreBatteryOptimizations();
-
 
   runApp(MultiProvider(
     providers: [
@@ -38,6 +37,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    context.read<AppProvider>().setting.localCacheEnabled = false;
     return ScreenUtilInit(
       designSize: const Size(1280, 800),
       builder: (context, child) {

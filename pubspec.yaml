@@ -41,7 +41,7 @@ dependencies:
   device_info_plus: ^10.0.1
   http: ^1.2.1
   flutter_secure_storage: ^9.0.0
-  video_player: ^2.8.3
+  video_player: ^2.4.0
   intl: any
   font_awesome_flutter: ^10.7.0
   flutter_form_builder: any
@@ -52,7 +52,10 @@ dependencies:
   flutter_cache_manager: ^3.3.2
   connectivity_plus: ^3.0.3
   permission_handler: ^11.0.1
-  network_info_plus: ^5.0.2
+  shared_preferences: ^2.2.3
+  dio: ^5.2.1
+  path_provider: ^2.0.14
+  chewie: ^1.8.5
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 class AdsModel {
   String? id;
   String? createdAt;
@@ -8,6 +10,7 @@ class AdsModel {
   String content = '';
   String type = '';
   int duration = 0;
+  File? cachedFile; // Cached file after download
 
   AdsModel(
       {required this.content,

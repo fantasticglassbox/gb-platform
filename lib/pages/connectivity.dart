@@ -1,7 +1,8 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart'; // Import Cache Manager
 import 'package:permission_handler/permission_handler.dart';
-import 'package:network_info_plus/network_info_plus.dart';
 
 class ConnectivityPage extends StatefulWidget {
   @override
@@ -14,7 +15,55 @@ class _ConnectivityPageState extends State<ConnectivityPage> {
   final passwordController = TextEditingController();
   String connectionStatus = 'Not connected';
   String macAddress = 'Unknown'; // Variable to hold MAC address
-  bool _obscurePassword = true; // State to toggle password visibility
+
+  @override
+  void initState() {
+    super.initState();
+    getAndroidId(); // Call to get MAC address when the page is initialized
+    checkWifiConnection();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Connectivity'),
+        automaticallyImplyLeading: false, // Remove the back button
+      ),
+      body: Center( // Center the content
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center, // Center the buttons vertically
+            children: [
+              ElevatedButton(
+                onPressed: connectToWifi,
+                child: Text('Connect to WiFi'),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: openDeveloperSetting, // Open developer settings
+                child: Text('Open System Setting'),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: startGlassbox, // Start Glassbox
+                child: Text('Start Glassbox'),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: clearCache, // Button to clear cache
+                child: Text('Clear Cache'),
+              ),
+              SizedBox(height: 20),
+              Text('Connection Status: $connectionStatus'),
+              Text('Device MAC Address: $macAddress'), // Display the MAC address
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Future<void> requestLocationPermission() async {
     var status = await Permission.location.status;
@@ -30,26 +79,17 @@ class _ConnectivityPageState extends State<ConnectivityPage> {
     }
   }
 
+  Future<void> openWifiSettings() async {
+    try {
+      await platform.invokeMethod('openWifiSettings');
+    } on PlatformException catch (e) {
+      print("Failed to open Wi-Fi settings: '${e.message}'.");
+    }
+  }
+
   Future<void> connectToWifi() async {
     await requestLocationPermission(); // Make sure to await this
-
-    try {
-      final String result = await platform.invokeMethod('connectToWifi', {
-        'ssid': ssidController.text,
-        'password': passwordController.text,
-      });
-
-      setState(() {
-        connectionStatus = result;
-      });
-      if (result.contains('Connected to ${ssidController.text}')) {
-        Navigator.pushNamed(context, '/login');
-      }
-    } on PlatformException catch (e) {
-      setState(() {
-        connectionStatus = "Failed to connect: '${e.message}'";
-      });
-    }
+    await openWifiSettings(); // This will open the Wi-Fi settings page
   }
 
   Future<void> getAndroidId() async {
@@ -63,61 +103,45 @@ class _ConnectivityPageState extends State<ConnectivityPage> {
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    getAndroidId(); // Call to get MAC address when the page is initialized
+  Future<void> checkWifiConnection() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+
+    setState(() {
+      if (connectivityResult == ConnectivityResult.wifi) {
+        connectionStatus = 'Connected to Wi-Fi';
+      } else if (connectivityResult == ConnectivityResult.mobile) {
+        connectionStatus = 'Connected to mobile data';
+      } else {
+        connectionStatus = 'Not connected to the internet';
+      }
+    });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Connect to WiFi')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: ssidController,
-              decoration: InputDecoration(
-                labelText: 'SSID',
-                border: OutlineInputBorder(),
-              ),
-              textInputAction: TextInputAction.next, // Move to next field
-              onSubmitted: (_) => FocusScope.of(context).nextFocus(), // On submit, go to next field
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: passwordController,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obscurePassword = !_obscurePassword; // Toggle password visibility
-                    });
-                  },
-                ),
-              ),
-              obscureText: _obscurePassword, // Toggle visibility based on state
-              textInputAction: TextInputAction.done, // Submit action for this field
-              onSubmitted: (_) => connectToWifi(), // On submit, try to connect
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: connectToWifi,
-              child: Text('Connect to WiFi'),
-            ),
-            SizedBox(height: 20),
-            Text('Connection Status: $connectionStatus'),
-            Text('Device MAC Address: $macAddress'), // Display the device MAC address
-          ],
-        ),
-      ),
-    );
+  Future<void> openDeveloperSetting() async {
+    try {
+      await platform.invokeMethod('openDeveloperOptions');
+    } on PlatformException catch (e) {
+      print("Failed to open developer options: '${e.message}'.");
+    }
+  }
+
+  Future<void> startGlassbox() async {
+    // context.read<AppProvider>().setSetting(setting);
+    Navigator.pushNamed(context, '/login');
+  }
+
+  // Function to clear the cache
+  Future<void> clearCache() async {
+    try {
+      await DefaultCacheManager().emptyCache(); // Clears the cache
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Cache cleared successfully!'))
+      );
+    } catch (e) {
+      print("Failed to clear cache: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to clear cache'))
+      );
+    }
   }
 }

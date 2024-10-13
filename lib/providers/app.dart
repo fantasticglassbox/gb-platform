@@ -12,7 +12,7 @@ class AppProvider with ChangeNotifier, DiagnosticableTreeMixin {
   String _sessionStatus = '';
   String _lastRoute = '';
   SettingModel _setting =
-      SettingModel(enableOrdering: true, defaultImage: true);
+      SettingModel(enableOrdering: true, defaultImage: true,localCacheEnabled:false);
 
   int get activeNavigationRailIndex => _activeNavigationRailIndex;
   String get recommendedId => _recommendedId;

@@ -21,19 +21,30 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
-            if (call.method == "connectToWifi") {
-                // Check for permission
-                if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CHANGE_WIFI_STATE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.CHANGE_WIFI_STATE), PERMISSION_REQUEST_CODE)
-                } else {
-                    connectToWifiManager(call, result)
+            when (call.method) {
+                "connectToWifi" -> {
+                    // Check for permission
+                    if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CHANGE_WIFI_STATE) != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.CHANGE_WIFI_STATE), PERMISSION_REQUEST_CODE)
+                    } else {
+                        connectToWifiManager(call, result)
+                    }
                 }
-            }else if(call.method == "getAndroidId"){
-                val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
-                result.success(androidId)
-            }
-            else {
-                result.notImplemented()
+                "getAndroidId" -> {
+                    val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+                    result.success(androidId)
+                }
+                "openDeveloperOptions" -> {
+                    openDeveloperOptions()
+                    result.success("Developer options opened")
+                }
+                "openWifiSettings" -> {
+                    openWifiSettings()
+                    result.success("Opened Wi-Fi Settings")
+                }
+                else -> {
+                    result.notImplemented()
+                }
             }
         }
     }
@@ -101,5 +112,15 @@ class MainActivity : FlutterActivity() {
             Log.e("WifiConnection", "Unable to connect to $ssid")
             result.error("CONNECTION_FAILED", "Unable to connect to $ssid", null)
         }
+    }
+
+    private fun openDeveloperOptions() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
+        startActivity(intent)
+    }
+
+    private fun openWifiSettings() {
+        val intent = Intent(Settings.ACTION_WIFI_SETTINGS)
+        startActivity(intent)
     }
 }

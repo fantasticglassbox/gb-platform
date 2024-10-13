@@ -1,241 +1,199 @@
 import 'dart:async';
 import 'dart:io';
-
-import 'package:carousel_slider/carousel_slider.dart';
+import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:glassbox/manager/cache_manager.dart';
 import 'package:glassbox/model/ads.dart';
-import 'package:glassbox/utils/shared_preference.dart';
-import 'package:http/http.dart' as http;
 import 'package:video_player/video_player.dart';
 
-import '../manager/custom_cache_manager.dart';
 class Carousel extends StatefulWidget {
-  final List<AdsModel> ads;
-  const Carousel({super.key, required this.ads});
+  final List<AdsModel> ads; // List of media items (both images and videos)
+
+  const Carousel({Key? key, required this.ads}) : super(key: key);
 
   @override
-  _CarouselState createState() => _CarouselState();
+  _MediaCarouselState createState() => _MediaCarouselState();
 }
 
-class _CarouselState extends State<Carousel> {
-  final _storage = const FlutterSecureStorage();
-  List controllerList = [];
-  CarouselController buttonCarouselController = CarouselController();
-  late Future<List<Widget>> futureAdsList;
-  bool isAdsFetched = false;
-  int adsCounter = 0;
-
-  Timer? _timer;
-  int currentAdsDuration = 10;
-
-  void startTimer() {
-    const oneSec = Duration(seconds: 1);
-    _timer = Timer.periodic(
-      oneSec,
-          (Timer timer) async {
-        if (currentAdsDuration == 0) {
-          buttonCarouselController.nextPage();
-
-          var url = Uri.https('api.glassbox.id',
-              '/v1/advertisements/${widget.ads[adsCounter].id}/complete');
-          final token = await _storage.readAll(
-            aOptions: getAndroidOptions(),
-          );
-          await http.post(url,
-              headers: {'Authorization': 'Bearer ${token['access_token']}'});
-        } else {
-          setState(() {
-            currentAdsDuration--;
-          });
-        }
-      },
-    );
-  }
+class _MediaCarouselState extends State<Carousel> {
+  int currentIndex = 0;
+  VideoPlayerController? _videoPlayerController;
+  ChewieController? _chewieController;
+  Timer? _imageTimer;
 
   @override
   void initState() {
     super.initState();
-    futureAdsList = getAdsList();
+
+    _downloadAndCacheMedia();
   }
 
   @override
-  void deactivate() {
-    _timer?.cancel();
-    controllerList.forEach((element) {
-      if (element != null) {
-        element.dispose();
-      }
-    });
-    super.deactivate();
+  void dispose() {
+    _videoPlayerController?.dispose();
+    _chewieController?.dispose();
+    _imageTimer?.cancel();
+    super.dispose();
   }
 
-  Future<File?> getCachedAsset(String url) async {
-    final cacheManager = CustomCacheManager(
-      stalePeriod: const Duration(days: 7),
-      maxNrOfCacheObjects: 100,
-    );
-    FileInfo? cachedFile = await cacheManager.getFileFromCache(url);
-
-    if (cachedFile == null) {
-      try {
-        File file = await cacheManager.getSingleFile(url);
-        return file;
-      } catch (e) {
-        print("Error downloading or caching file: $e");
-        return null;
-      }
+  // Method to cache media files before starting the carousel
+  Future<void> _downloadAndCacheMedia() async {
+    for (var mediaItem in widget.ads) {
+      mediaItem.cachedFile ??= await _cacheMedia(mediaItem.content);
     }
-    return cachedFile.file;
+    _playCurrentMedia(); // Start playing after caching is complete
   }
 
-  Future<List<Widget>> getAdsList() async {
-    List<Widget> mediaList = [];
+  Future<File?> _cacheMedia(String url) async {
+    final GbCacheManager gbCacheManager = GbCacheManager();
+    try {
+      return await gbCacheManager.getCachedFile(url);
+    } catch (e) {
+      Navigator.pushNamed(context, '/connectivity');
+    }
+    return null;
+  }
 
-    for (var element in widget.ads) {
-      final cachedAsset = await getCachedAsset(element.content);
+  void _playCurrentMedia() {
+    if(widget.ads.isEmpty) {
+      return;
+    }
+    final currentMedia = widget.ads[currentIndex];
+    if (currentMedia.type == 'VIDEO') {
+      _playVideo(currentMedia.cachedFile?.path ?? currentMedia.content);
+    } else {
+      _showImageForDuration(
+          currentMedia.cachedFile?.path ?? currentMedia.content,
+          currentMedia.duration);
+    }
+  }
 
-      if (element.type == 'IMAGE') {
-        ImageProvider imageProvider;
-        if (cachedAsset == null) {
-          imageProvider = NetworkImage(element.content);
-        } else {
-          imageProvider = FileImage(cachedAsset);
-        }
+  Future<void> _playVideo(String videoUrl) async {
+    _disposeVideoPlayer(); // Dispose of previous controllers and clear timers
 
-        // Use Image to determine its intrinsic aspect ratio
-        mediaList.add(
-          LayoutBuilder(
-            builder: (context, constraints) {
-              return FutureBuilder<Size>(
-                future: _getImageSize(imageProvider), // Get the image size
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    // Get the aspect ratio of the image (width / height)
-                    double aspectRatio = snapshot.data!.width / snapshot.data!.height;
-                    return AspectRatio(
-                      aspectRatio: aspectRatio, // Use default aspect ratio
-                      child: Image(
-                        image: imageProvider,
-                        fit: BoxFit.cover,
-                        alignment: Alignment.center,
-                      ),
-                    );
-                  } else {
-                    // Show a loading placeholder if image size is not yet available
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                },
-              );
-            },
-          ),
-        );
+    final localPath = await _cacheMedia(
+        videoUrl); // Ensure we're working with the local file path
 
-        controllerList.add(null);
-      } else {
-        VideoPlayerController controller = VideoPlayerController.networkUrl(Uri.parse(element.content));
-
-        if (cachedAsset != null) {
-          controller = VideoPlayerController.file(cachedAsset);
-        }
-
-        mediaList.add(Stack(
-          children: [
-            Container(color: Colors.black),
-            Center(
-              child: AspectRatio(
-                aspectRatio: 16.0 / 9.0,
-                child: VideoPlayer(controller),
-              ),
-            )
-          ],
-        ));
-        controller.setLooping(true);
-        controllerList.add(controller);
-      }
+    if (localPath == null || !localPath.existsSync()) {
+      print('Local video file does not exist: $videoUrl');
+      _nextMedia(); // Skip to next media if the file is not found
+      return;
     }
 
-    return mediaList;
+    _videoPlayerController = VideoPlayerController.file(localPath);
+
+    try {
+      await _videoPlayerController!.initialize();
+      if (_videoPlayerController!.value.hasError) {
+        print(
+            'Initialization error: ${_videoPlayerController!.value.errorDescription}');
+        _nextMedia();
+        return;
+      }
+
+      _chewieController = ChewieController(
+        videoPlayerController: _videoPlayerController!,
+        autoPlay: true,
+        looping: false,
+        aspectRatio: _videoPlayerController!.value.aspectRatio,
+        showControls: false,
+        showControlsOnInitialize: false,
+        showOptions: false,
+      );
+
+      if (mounted) {
+        setState(() {});
+      }
+
+      // Listen for video completion or errors
+      _videoPlayerController!.addListener(() {
+        if (_videoPlayerController!.value.position ==
+            _videoPlayerController!.value.duration) {
+          _nextMedia();
+        } else if (_videoPlayerController!.value.hasError) {
+          print(
+              'Playback error: ${_videoPlayerController!.value.errorDescription}');
+          _nextMedia();
+        }
+      });
+    } catch (error) {
+      print('Error during video initialization: $error');
+      _nextMedia();
+    }
+
+    print('Attempting to play video from: $videoUrl');
   }
 
-  // Function to get the size of an image
-  Future<Size> _getImageSize(ImageProvider imageProvider) async {
-    final Completer<Size> completer = Completer();
-    final ImageStreamListener listener = ImageStreamListener((ImageInfo info, bool _) {
-      var myImageSize = Size(info.image.width.toDouble(), info.image.height.toDouble());
-      completer.complete(myImageSize);
+  void _disposeVideoPlayer() {
+    _videoPlayerController?.dispose();
+    _chewieController?.dispose();
+    _imageTimer?.cancel(); // Cancel any image timers if they exist
+    _videoPlayerController = null; // Clear the reference
+    _chewieController = null; // Clear the reference
+  }
+
+  void _showImageForDuration(String imageUrl, int duration) {
+    _disposeVideoPlayer(); // Dispose of any previous video controllers
+
+    // Start a timer to show the image for the specified duration
+    _imageTimer = Timer(Duration(seconds: duration), () {
+      _nextMedia(); // Move to the next media after the timer expires
     });
 
-    imageProvider.resolve(const ImageConfiguration()).addListener(listener);
-    return completer.future;
+    setState(() {});
+  }
+
+  void _nextMedia() {
+    setState(() {
+      // Increment current index and loop back to the start if at the end
+      currentIndex = (currentIndex + 1) % widget.ads.length;
+    });
+    _playCurrentMedia(); // Play the next media
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: futureAdsList,
-      builder: (context, snapshot) {
-        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-          final adsList = snapshot.data;
+    // Check if ads list is empty
+    if (widget.ads.isEmpty) {
+      return Center(
+        child: const Text('No ads available', style: TextStyle(fontSize: 24)),
+      );
+    }
 
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!isAdsFetched) {
-              startTimer();
-              setState(() {
-                isAdsFetched = true;
-              });
-            }
-          });
-
-          return CarouselSlider(
-            carouselController: buttonCarouselController,
-            disableGesture: true,
-            items: adsList!.map((item) {
-              return item;
-            }).toList(),
-            options: CarouselOptions(
-              clipBehavior: Clip.antiAlias,
-              autoPlayCurve: Curves.easeInOutSine,
-              onPageChanged: (index, reason) {
-                setState(() {
-                  currentAdsDuration = widget.ads[index].duration;
-                  if (adsCounter + 1 < widget.ads.length) {
-                    adsCounter++;
-                  } else {
-                    adsCounter = 0;
-                  }
-                });
-                if (widget.ads[index].type == 'VIDEO') {
-                  controllerList[index].initialize();
-                  controllerList[index].play();
-                } else {
-                  controllerList.forEach((element) {
-                    if (element != null) {
-                      element.pause();
-                      element.seekTo(Duration.zero);
-                    }
-                  });
-                }
-              },
-              viewportFraction: 1.0,
-            ),
-          );
-        } else if (snapshot.data != null && snapshot.data!.isEmpty) {
-          return Center(
-            child: Text(
-              'No available ads',
-              style: TextStyle(fontSize: 20.sp),
-            ),
-          );
-        } else if (snapshot.hasError) {
-          return Text('${snapshot.error}');
-        }
-
-        return const Center(child: CircularProgressIndicator());
-      },
+    final currentMedia = widget.ads[currentIndex];
+    print(
+        'playing media ${currentMedia.content} ${currentMedia.cachedFile?.path}');
+    return Center(
+      child: currentMedia.type == 'VIDEO'
+          ? (_chewieController != null &&
+                  _chewieController!.videoPlayerController.value.isInitialized
+              ? AspectRatio(
+                  aspectRatio: _chewieController!
+                      .videoPlayerController.value.aspectRatio,
+                  child: Chewie(controller: _chewieController!),
+                )
+              : const CircularProgressIndicator())
+          : (currentMedia.cachedFile != null
+              ? Image.file(
+                  currentMedia.cachedFile!,
+                  fit: BoxFit.cover, // Change fit to control how the image fits
+                  width: MediaQuery.of(context)
+                      .size
+                      .width, // Ensure the image takes up the full width
+                  height: MediaQuery.of(context)
+                      .size
+                      .height, // Ensure the image takes up the full height
+                )
+              : Image.network(
+                  currentMedia.content,
+                  fit: BoxFit.cover, // Change fit to control how the image fits
+                  width: MediaQuery.of(context)
+                      .size
+                      .width, // Ensure the image takes up the full width
+                  height: MediaQuery.of(context)
+                      .size
+                      .height, // Ensure the image takes up the full height
+                )),
     );
   }
 }
-

@@ -31,4 +31,13 @@ class CustomCacheManager extends CacheManager {
       return instance;
     }
   }
+  // Method to clear all cached data
+  Future<void> emptyCache() async {
+    try {
+      await emptyCache(); // Provided by the parent CacheManager class
+    } catch (e) {
+      print("Failed to clear cache: $e");
+      throw e;
+    }
+  }
 }
