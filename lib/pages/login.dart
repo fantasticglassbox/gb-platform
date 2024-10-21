@@ -17,6 +17,8 @@ import 'package:glassbox/utils/shared_preference.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
+import '../manager/connectivity.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -43,33 +45,14 @@ class _LoginPageState extends State<LoginPage> {
     super.deactivate();
   }
 
-  Future<bool> hasNetwork() async {
-    try {
-      final result = await InternetAddress.lookup('api.glassbox.id');
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } on SocketException catch (_) {
-      return false;
-    }
-  }
-  Future<bool> isConnectedToWifi() async {
-    ConnectivityResult connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.wifi) {
-      return true;
-    } else {
-      return false;
-    }
-  }
   Future<String?> getAndroidId() async {
     final String result = await platform.invokeMethod('getAndroidId');
     return result;
   }
   Future<void> initPlatformState() async {
-    if(!await hasNetwork() && !context.read<AppProvider>().setting.localCacheEnabled){
+    if(!await GbConnectivity().hasNetwork() && !context.read<AppProvider>().setting.localCacheEnabled){
       Navigator.pushNamed(context, '/connectivity');
       return;
-    }else{
-      print('internet available');
-      context.read<AppProvider>().setting.localCacheEnabled = true;
     }
     var deviceData;
     String os = '';
@@ -187,7 +170,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   _fetchAds() async{
-    if(!await hasNetwork()){
+    if(!await GbConnectivity().hasNetwork()){
       return;
     }
     final token = await _storage.readAll(

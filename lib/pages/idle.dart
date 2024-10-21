@@ -78,7 +78,7 @@ class _IdleState extends State<Idle> {
 
   // Method to start the timer to refresh ads
   void _startAdsRefreshTimer() {
-    _adsRefreshTimer = Timer.periodic(Duration(seconds: 30), (timer) {
+    _adsRefreshTimer = Timer.periodic(Duration(days: 7), (timer) {
       _fetchAdsFromServer(); // Fetch ads every 30 seconds
     });
   }

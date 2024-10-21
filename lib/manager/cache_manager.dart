@@ -28,5 +28,19 @@ class GbCacheManager {
     }
     return null; // Return null in case of error
   }
+  Future<void> deleteCacheDir() async {
+    var tempDir = await getTemporaryDirectory();
+    print('remove $tempDir');
+    if (tempDir.existsSync()) {
+      tempDir.deleteSync(recursive: true);
+    }
+  }
 
+  Future<void> deleteAppDir() async {
+    var appDocDir = await getApplicationDocumentsDirectory();
+
+    if (appDocDir.existsSync()) {
+      appDocDir.deleteSync(recursive: true);
+    }
+  }
 }

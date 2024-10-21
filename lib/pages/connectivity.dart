@@ -2,6 +2,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart'; // Import Cache Manager
+import 'package:glassbox/manager/cache_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ConnectivityPage extends StatefulWidget {
@@ -133,7 +134,7 @@ class _ConnectivityPageState extends State<ConnectivityPage> {
   // Function to clear the cache
   Future<void> clearCache() async {
     try {
-      await DefaultCacheManager().emptyCache(); // Clears the cache
+      await GbCacheManager().deleteCacheDir(); // Clears the cache
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Cache cleared successfully!'))
       );
